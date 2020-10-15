@@ -1,1 +1,1 @@
-javac -cp "../logist/logist.jar:../logist/lib*.jar:." -d "bin"  template/*.java
+javac -cp "../logist/logist.jar:../logist/lib*.jar:." -d "bin"  deliberative/*.java
