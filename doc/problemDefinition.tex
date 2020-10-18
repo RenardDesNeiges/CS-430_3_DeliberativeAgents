@@ -43,12 +43,46 @@
 \headsep=0.5in
 
 
-\title{CS-430 : Problem Definition for the Reactive Agent Assignement}
+\title{CS-430 : Problem Definition for the Reactive Agent Assignment}
 \date{\today}
 \author{Titouan Renard, Christophe Marciot}
 
 \begin{document}
 \maketitle	
+
+\section{Problem definition}
+
+We are trying to implement an agent that functions according to the following basic procedure.
+
+\begin{algorithm}
+    \SetAlgoLined
+    \caption{Basic Agent Logic}
+    \While(){goal not reached}{
+        \If(){current plan not applicable anymore}{
+            Compute optimal plan
+        }
+        \Else{
+            Execute next action in the plan
+        }
+    }
+\end{algorithm}
+
+In this case optimality is defined as \emph{minimum cost function}. And the cost function is computed for any road taken as such :
+
+\[c(\text{road}) = l_{road} \cdot c_{kil}\]
+
+Where the value $l_{road}$ is the length of a given road and the value $c_{kil}$ is the cost per kilometer for a given agent. \\
+
+Computing an optimal plan can be though of as finding a plan $p_{opt}$ such that:
+
+\[p_{opt} = argmin_{p} \{ cost(p) | \text{ p reaches a goal} \}\]
+
+Where to cost of a plan is simply given by :
+
+\[cost(p) = \sum_{r \in \text{ roads in the plan}} cost(r)\]
+
+The \emph{goal} of our agent is to deliver all tasks on the map, all of these tasks as well as the length of every road and the cost per kilometer are known prior to planning. We will use \emph{BFS} and \emph{ASTAR} to find an optimal solution.
+
 
 \end{document}
 
