@@ -149,6 +149,7 @@ The \emph{goal} state is defined as any state where :
     }
 \end{algorithm}
 
+\newpage
 \section{Tree Search algorithms}
 
 \subsection{Breadth First Search}
@@ -162,13 +163,28 @@ The \emph{goal} state is defined as any state where :
     \Repeat(){Q = $\emptyset$}{
         n $\leftarrow$ first(Q), Q $\leftarrow$ rest(Q) \\
         \If(){n is a goal state}{
-            \Return{n}
+            \Return{Backtrack(n)}
         }
         $S \leftarrow$ succ(n) \\
         $Q \leftarrow$ append(Q,S)
     }
     \Return{FAIL}
 \end{algorithm}
+
+Since in our case we look for a \emph{path} in the state graph, not just the goal \emph{state}, and in order to efficiently find a path (and to keep a smaller memory footprint of the algorithm) we give each state node a \emph{parent} attribute, this enables us to implement the following algorithm. 
+
+\begin{algorithm}[H]
+    \caption{Backtrack(goal)}
+    \SetAlgoLined
+    let \emph{plan} be a stack \\
+    $n \leftarrow$ goal\\
+    \Repeat(){n $\neq$ start state}{
+        push $n$ into \emph{plan}
+        n $\leftarrow$ n.parent()
+        }
+    \Return{\emph{plan}}
+\end{algorithm}
+
 
 \subsection{ASTAR}
 
