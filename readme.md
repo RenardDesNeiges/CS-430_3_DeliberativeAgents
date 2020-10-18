@@ -10,7 +10,7 @@ Implementation of a planning deliberative agent with graph-search algorithms.
 * **NOT DONE** Compare performance of ASTAR and BFS for various problem sizes
 * **NOT DONE** Run the simulation with 1,2,3 deliberative agent and report on the diffrences and joint performances of the agents
 
-## Todo :
+## Todo : 
 
 * Define states, transitions and goals representations
 * Implement the agent

@@ -77,7 +77,7 @@ Computing an optimal plan can be though of as finding a plan $p_{opt}$ such that
 
 \[p_{opt} = argmin_{p} \{ cost(p) | \text{ p reaches a goal} \}\]
 
-Where to cost of a plan is simply given by :
+Where the cost of a plan is simply given by :
 
 \[cost(p) = \sum_{r \in \text{ roads in the plan}} cost(r)\]
 
@@ -93,20 +93,44 @@ We will use \emph{BFS} and \emph{ASTAR} to find an optimal solution.
 
 Since we are working in a deliberative agent paradigm, we will not generate every possible state prior to planning, instead we will define states as a set of variables that are defined by our algorithm as it searches the solution space.
 
+\subsection{States}
+
+The states the agent can be in are defined by the following variables, for a given agent \textbf{agent}:
+\begin{enumerate}
+    \item \textbf{agent.position} : the city a given agent is in
+    \item \textbf{agent.ctasks} : the list of all tasks carried by the agent in a given state
+    \item \textbf{agent.cweight} : the total weight carried by the agent in a given state
+    \item \textbf{free\_tasks} : the complete list of all undelivered, not yet picked-up tasks at a given state
+\end{enumerate}
+
 \subsection{Transitions}
 
-Our agent can perform two basic actions 
+Our agent can perform three basic actions 
 \begin{enumerate}
     \item It can drive from one city to another
     \item It can decide to pickup or not to pickup a task when it is in a given city
+    \item It can decide to deliver a task when it is in the city it should be delivered to 
 \end{enumerate}
-We therefore construct our state representation around those two fundamental transitions :
+We therefore construct our state representation around those three fundamental transitions :
 \begin{enumerate}
     \item \textbf{drive(start, destination)} : the movement action between two \emph{adjacent} cities.
-    \subitem Cost function defined as : $cost_{drive}(road_{start,destination}) = l_{road} \cdot c_{kil} $
-    \item \textbf{pickup(task)} : the action of adding a contract to be carried by the agent
-    \subitem Cost function defined as : $cost_{pickup}=0$
+    \subitem \emph{Cost function} defined as : $cost_{drive}(road_{start,destination}) = l_{road} \cdot c_{kil} $
+    \subitem \emph{Possible} $\iff$ the agent is in the city \emph{start} and the city \emph{destination} is adjacent to \emph{start}.
+    \subitem \emph{Consequences} : agent is now in the city \emph{destination}
+    \item \textbf{pickup(task)} : the action of adding a task to be carried by the agent
+    \subitem \emph{Cost function} defined as : $cost_{pickup}=0$
+    \subitem \emph{Possible} $\iff$ the agent is in the city where \emph{task} is and if \[\textit{agent.cweight}+\text{ w$_{task}$} \leq \text{ capacity}\]
+    \subitem \emph{Consequences} : agent appends \emph{task} to \emph{agent.ctasks} and adds the weight $w_{task}$ of the new task to \emph{agent.cweight}, \emph{task} is removed from \emph{free\_tasks}
+    \item \textbf{deliver(task)} : the action of delivering a task carried by the agent to it's destination
+    \subitem \emph{Cost function} defined as : $cost_{deliver}=0$
+    \subitem \emph{Possible} $\iff$ the agent is in the city where \emph{task} should be delivered
+    \subitem \emph{Consequences} : agent removes \emph{task} from \emph{agent.ctasks} and substracts the weight $w_{task}$ from the task to \emph{agent.cweight}
 \end{enumerate}
+
+\subsection{Goal}
+
+The \emph{goal} state is defined as any state where :
+\[\text{free\_tasks } = \emptyset\]
 
 \end{document}
 
