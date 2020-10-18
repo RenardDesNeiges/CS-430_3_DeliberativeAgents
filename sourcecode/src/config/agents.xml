@@ -10,7 +10,19 @@
 		<set algorithm="ASTAR"/>
 	</agent>
 
-	<agent name="deliberative-main">
+	<agent name="deliberative-1">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.Deliberative"/>
+		<set algorithm="ASTAR"/>
+	</agent>
+
+	<agent name="deliberative-2">
+		<set class-path="bin/"/>
+		<set class-name="deliberative.Deliberative"/>
+		<set algorithm="ASTAR"/>
+	</agent>
+
+	<agent name="deliberative-3">
 		<set class-path="bin/"/>
 		<set class-name="deliberative.Deliberative"/>
 		<set algorithm="ASTAR"/>

@@ -9,7 +9,7 @@ Implementation of a planning deliberative agent with graph-search algorithms.
   * Complexity of BFS makes it basically unable to deal with the dimensionality of the problem
 * **DONE(kinda)** Implement a deliberative agent that can use the above algorithms
 * **NOT DONE** Compare performance of ASTAR and BFS for various problem sizes
-* **NOT DONE** Run the simulation with 1,2,3 deliberative agent and report on the diffrences and joint performances of the agents
+* **DONE(Kinda)** Run the simulation with 1,2,3 deliberative agent and report on the diffrences and joint performances of the agents
 
 ## Todo : 
 
@@ -23,4 +23,5 @@ Implementation of a planning deliberative agent with graph-search algorithms.
   * **NOT DONE** implement a heuristic function that makes more sense or at least justify why the fuck it workds how it does not
   *  **DONE** re-planning
   * **DONE** Run the simulation with several agents ==> it works
+  * **NOT DONE** Think of a way of exporting data to quantify performance
 * Write a report
