@@ -1,9 +1,13 @@
 package deliberative;
 
+import java.util.Collection;
 // Importing java utils
 import java.util.LinkedList;
-import java.util.Random;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.Objects;
 
+import ilog.concert.IloIntNaryTable.Iterator;
 /* import table */
 import logist.simulation.Vehicle;
 import logist.agent.Agent;
@@ -26,6 +30,9 @@ class State{
 	public State parent;
 	public double cost;
 
+	/*
+	 * Basic constructor
+	 */
 	public State(logist.topology.Topology.City city, 
 			LinkedList<Task> ctask, LinkedList<Task> free_tasks, 
 			State parent, double cost){
@@ -36,6 +43,9 @@ class State{
 		this.cost = cost;
 	}
 
+	/*
+	 * Constructor taking a TaskSet and converting it to a LinkedList<Task>
+	 */
 	public State(logist.topology.Topology.City city, 
 			LinkedList<Task> ctask,
 			TaskSet free_tasks, State parent, double cost) {
@@ -52,6 +62,9 @@ class State{
 		this.free_tasks = lFreeTasks;
 	}
 
+	/*
+	 * Compute the weight carried by the agent in this state
+	 */
 	public long cweight() {
 		long	sum = 0;
 		for(Task task :this.ctask){
@@ -61,25 +74,24 @@ class State{
 	}
 
 	/*
-		This function generates all possible states the agent 
-			my transition to from a given start state 
-			(the successors on the graph)
-	*/
-	public LinkedList<State> succ(Topology topology,int capacity){
-		LinkedList<State> succ = new LinkedList<State>();
+	 * Generates all possible states the agent might transition to from a given start
+	 * state (the successors on the graph)
+	 */
+	public Stack<State> succ(Topology topology,int capacity){
+		Stack<State> succ = new Stack<State>();
 		
 		//generating movement actions
 		for (City stop : topology) {
 			if(this.city.hasNeighbor(stop)){
 				State nState = new State(stop, this.ctask, this.free_tasks, this, this.cost+this.city.distanceTo(stop)* capacity);
-				succ.add(nState);
+				succ.push(nState);
 			}
 		}
 		//generating pickup actions
 		for (Task task : this.free_tasks) {
 			//checking wether or not the task is possible to pickup in the state
 			if(task.pickupCity == this.city && task.weight<(capacity - this.cweight())){
-
+				///// WARNING APPARENTLY THIS IS UNSAFE TYPECASTING 
 				LinkedList nCTask = new LinkedList();
 				nCTask = (LinkedList) this.ctask.clone();
 				nCTask.add(task);
@@ -88,7 +100,7 @@ class State{
 				nFreeTasks.remove(task);
 				
 				State nState = new State(this.city, nCTask, nFreeTasks, this, this.cost);
-				succ.add(nState);
+				succ.push(nState);
 			}
 		}
 
@@ -101,14 +113,27 @@ class State{
 				nCTask.remove(task);
 
 				State nState = new State(this.city, nCTask, this.free_tasks, this, this.cost);
-				succ.add(nState);
+				succ.push(nState);
 			}
 		}
 
-
+		//We return a linked list of possible successor states
 		return succ;
 	}
 
+	/*
+	 * Returns true if state is a goal state
+	 */
+	public Boolean isGoal(){
+		if(this.free_tasks.size() == 0){
+			return true;
+		}
+		return false;
+	}
+
+	/*
+	 * When print is called on a State object, this is what is gets printed
+	 */
 	@Override
 	public String toString() {
 		return this.city + ": cost:" + this.cost;
@@ -141,7 +166,7 @@ public class Deliberative implements DeliberativeBehavior {
 		
 		
 		// initialize the planner
-		int capacity = agent.vehicles().get(0).capacity();
+		this.capacity = agent.vehicles().get(0).capacity();
 		String algorithmName = agent.readProperty("algorithm", String.class, "ASTAR");
 
 		
@@ -159,11 +184,11 @@ public class Deliberative implements DeliberativeBehavior {
 		switch (algorithm) {
 		case ASTAR:
 			// ...
-			plan = BFS(vehicle, tasks);
+			plan = bfsPlanGenerator(vehicle, tasks);
 			break;
 		case BFS:
 			// ...
-			plan = BFS(vehicle, tasks);
+			plan = bfsPlanGenerator(vehicle, tasks);
 			break;
 		default:
 			throw new AssertionError("Should not happen.");
@@ -171,15 +196,50 @@ public class Deliberative implements DeliberativeBehavior {
 		return plan;
 	}
 
-	private Plan BFS(Vehicle vehicle, TaskSet tasks) {
+	private State bfsAlgorithm(Vehicle vehicle, TaskSet tasks){
+		System.out.println(tasks);
+		Queue<State> Q = new LinkedList<State>();
+		Q.add(new State(vehicle.getCurrentCity(), new LinkedList<Task>(), tasks, null, 0.0)); //initializing the stack with the root node
+		while (Q.size()>0){
+			State node = Q.remove(); //this is why we use a stack instead of a list
+			if(node.isGoal()){
+				return node;
+			}
+		//Pushing the new states into the stack
+		//System.out.println(this.capacity);
+		Stack<State> newStates = node.succ(this.topology, this.capacity);
+		//System.out.println(newStates);
+		for (State st : newStates) {
+			Q.add(st);
+		}
+	}
+		return null;
+	}
+
+	private LinkedList<State> backtrack(State endstate){
+		LinkedList<State> path = new LinkedList<State>();
+		State current = endstate;
+		while(current != null){
+			path.add(current);
+			current = current.parent;
+		}
+		for (int i = path.size(); i-- > 0;) {
+			System.out.println(path.get(i));
+		}
+		return path;
+	}
+
+	private Plan bfsPlanGenerator(Vehicle vehicle, TaskSet tasks) {
 		City current = vehicle.getCurrentCity();
 		Plan plan = new Plan(current);
 
 		///// TESTING ENV
 		///////////////////////////////////////////////////////////////////////////////////////////
-		System.out.println("Current city is : " + vehicle.getCurrentCity());
-		State testState = new State(vehicle.getCurrentCity(), new LinkedList<Task>(), tasks, null, 0);
-		System.out.println(testState.succ(this.topology, agent.vehicles().get(0).capacity()));
+		System.out.println(backtrack(bfsAlgorithm(vehicle, tasks)));
+
+		// System.out.println("Current city is : " + vehicle.getCurrentCity());
+		// State testState = new State(vehicle.getCurrentCity(), new LinkedList<Task>(), tasks, null, 0);
+		// System.out.println(testState.succ(this.topology, agent.vehicles().get(0).capacity()));
 		///////////////////////////////////////////////////////////////////////////////////////////
 		for (Task task : tasks) {
 			// move: current city => pickup location
