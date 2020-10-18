@@ -149,10 +149,55 @@ The \emph{goal} state is defined as any state where :
     }
 \end{algorithm}
 
-\section{ASTAR Heuristics Definition}
-?????
+\section{Tree Search algorithms}
 
-\section{Proving Optimality of Solution}
+\subsection{Breadth First Search}
+
+\emph{From the course : }
+
+\begin{algorithm}[H]
+    \caption{Breadth-first(InitialNode)}
+    \SetAlgoLined
+    $Q \leftarrow$ (InitialNode)
+    \Repeat(){Q is empty}{
+        n $\rightarrow$ first(Q), Q $\leftarrow$ rest(Q) \\
+        \If(){n is a goal state}{
+            \Return{n}
+        }
+        $S \leftarrow$ succ(n) \\
+        $Q \leftarrow$ append(Q,S)
+    }
+    \Return{FAIL}
+\end{algorithm}
+
+\subsection{ASTAR}
+
+\emph{From the course : }
+
+\begin{algorithm}[H]
+    \caption{ASTAR(InitialNode)}
+    \SetAlgoLined
+    $Q \leftarrow$ (InitialNode)
+    \Repeat(){Q is empty}{
+        n $\rightarrow$ first(Q), Q $\leftarrow$ rest(Q) \\
+        \If(){n is a goal state}{
+            \Return{n}
+        }
+        \If(){$n \not \in C$ has a lower cost than its copy in C }{
+            C $\leftarrow$ append(n,C)\\
+            S $\leftarrow$ succ(n) \\
+            S $\leftarrow$ sort(S,f) \\
+            Q $\leftarrow$ merge(Q,S,f) (Q is ordered by $f(n) = g(n)+h(n)$)
+        }
+    }
+    \Return{FAIL}
+\end{algorithm}
+
+\subsubsection{ASTAR Heuristics Definition}
+To be defined
+
+\subsection{Proving Optimality of Solution}
+To be done
 
 \end{document}
 
