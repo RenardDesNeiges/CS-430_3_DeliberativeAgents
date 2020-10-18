@@ -18,6 +18,8 @@ Implementation of a planning deliberative agent with graph-search algorithms.
   * **DONE(kinda)** Implement the state class
   * **DONE** The succ function for a given state class
   * **DONE** goal detection
-  * **DONE(but fucked up my dude)** Plan generation from states
+  * **DONE** Plan generation from states
+  * **NOT DONE** some way to solve using BFS which is not atrocious
+  * **NOT DONE** implement a heuristic function that makes more sense or at least justify why the fuck it workds how it does not
   * **NOT DONE** re-planning
 * Write a report

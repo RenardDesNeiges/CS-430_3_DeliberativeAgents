@@ -281,13 +281,7 @@ public class Deliberative implements DeliberativeBehavior {
 			}
 			else if(path.get(i).act == Act.PICKUP){
 				//System.out.print("Picked up ");
-				for(Task tsk : path.get(i).ctask){
-					if(tsk.pickupCity == path.get(i).city){
-						plan.appendPickup(tsk);
-						//System.out.println(tsk);
-						break;
-					}
-				}
+				plan.appendPickup(path.get(i).ctask.getLast());
 			}
 			else if(path.get(i).act == Act.DELIVER){
 				//System.out.println(path.get(i+1).ctask);
@@ -308,7 +302,7 @@ public class Deliberative implements DeliberativeBehavior {
 	
 	private Plan astarPlanGenerator(Vehicle vehicle, TaskSet tasks) {
 		Plan plan = backtrack(astarAlgorithm(vehicle, tasks));
-		//System.out.println(plan);
+		System.out.println(plan);
 		///// TESTING ENV
 		///////////////////////////////////////////////////////////////////////////////////////////
 
