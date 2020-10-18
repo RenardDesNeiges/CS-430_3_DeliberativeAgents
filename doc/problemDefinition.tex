@@ -95,12 +95,12 @@ Since we are working in a deliberative agent paradigm, we will not generate ever
 
 \subsection{States}
 
-The states the agent can be in are defined by the following variables, for a given agent \textbf{agent}:
+The states the agent can be in are defined by the following variables, for a given state \textbf{state}:
 \begin{enumerate}
-    \item \textbf{agent.position} : the city a given agent is in
-    \item \textbf{agent.ctasks} : the list of all tasks carried by the agent in a given state
-    \item \textbf{agent.cweight} : the total weight carried by the agent in a given state
-    \item \textbf{agent.free\_tasks} : the complete list of all undelivered, not yet picked-up tasks at a given state
+    \item \textbf{state.position} : the city a given agent is in
+    \item \textbf{state.ctasks} : the list of all tasks carried by the agent in a given state
+    \item \textbf{state.cweight} : the total weight carried by the agent in a given state
+    \item \textbf{state.free\_tasks} : the complete list of all undelivered, not yet picked-up tasks at a given state
 \end{enumerate}
 
 \subsection{Transitions}
@@ -119,22 +119,22 @@ We therefore construct our state representation around those three fundamental t
     \subitem \emph{Consequences} : agent is now in the city \emph{destination}
     \item \textbf{pickup(task)} : the action of adding a task to be carried by the agent
     \subitem \emph{Cost function} defined as : $cost_{pickup}=0$
-    \subitem \emph{Possible} $\iff$ the agent is in the city where \emph{task} is and if \[\textit{agent.cweight}+\text{ w$_{task}$} \leq \text{ capacity}\]
-    \subitem \emph{Consequences} : agent appends \emph{task} to \emph{agent.ctasks} and adds the weight $w_{task}$ of the new task to \emph{agent.cweight}, \emph{task} is removed from \emph{agent.free\_tasks}
+    \subitem \emph{Possible} $\iff$ the agent is in the city where \emph{task} is and if \[\textit{state.cweight}+\text{ w$_{task}$} \leq \text{ capacity}\]
+    \subitem \emph{Consequences} : agent appends \emph{task} to \emph{state.ctasks} and adds the weight $w_{task}$ of the new task to \emph{state.cweight}, \emph{task} is removed from \emph{state.free\_tasks}
     \item \textbf{deliver(task)} : the action of delivering a task carried by the agent to it's destination
     \subitem \emph{Cost function} defined as : $cost_{deliver}=0$
     \subitem \emph{Possible} $\iff$ the agent is in the city where \emph{task} should be delivered
-    \subitem \emph{Consequences} : agent removes \emph{task} from \emph{agent.ctasks} and substracts the weight $w_{task}$ from the task to \emph{agent.cweight}
+    \subitem \emph{Consequences} : agent removes \emph{task} from \emph{state.ctasks} and substracts the weight $w_{task}$ from the task to \emph{state.cweight}
 \end{enumerate}
 
 \subsection{Goal}
 
 The \emph{goal} state is defined as any state where :
-\[\text{agent.free\_tasks } = \emptyset\]
+\[\text{state.free\_tasks } = \emptyset\]
 
 \section{Implementation of the re-planning algorithm}
 
-\textbf{Problem: }if every agent has it's own \emph{agent.free\_tasks} data-structure, it will not be able to cope with the fact that some other agent may take a task and remove it from the actual list of free tasks.\\
+\textbf{Problem: }if every agent has it's own \emph{state.free\_tasks} data-structure, it will not be able to cope with the fact that some other agent may take a task and remove it from the actual list of free tasks.\\
 \textbf{Solution: }check at each state wether or not the free tasks have been modified, if it is the case, replan accordingly. This is essentially what the \emph{Basic agent logic} algorithm suggests but this is a somewhat more detailed implementation:
 
 \begin{algorithm}
@@ -142,7 +142,7 @@ The \emph{goal} state is defined as any state where :
     \caption{Replanning Implementation}
     \textbf{Initialization :} $p_{opt}\leftarrow $ compute\_optimal\_plan(\emph{global.free\_tasks})  \\
     \While(){goal not reached}{
-        \If(){\emph{agent.free\_task} $\neq$ \emph{global.free\_tasks}}{
+        \If(){\emph{state.free\_task} $\neq$ \emph{global.free\_tasks}}{
             $p_{opt} \leftarrow$ compute\_optimal\_plan(\emph{global.free\_tasks}) \\
         }
         execute next action in $p_{opt}$
@@ -156,11 +156,11 @@ The \emph{goal} state is defined as any state where :
 \emph{From the course : }
 
 \begin{algorithm}[H]
-    \caption{Breadth-first(InitialNode)}
+    \caption{Breadth-first(InitState)}
     \SetAlgoLined
-    $Q \leftarrow$ (InitialNode)
-    \Repeat(){Q is empty}{
-        n $\rightarrow$ first(Q), Q $\leftarrow$ rest(Q) \\
+    $Q \leftarrow$ (InitState) \\
+    \Repeat(){Q = $\emptyset$}{
+        n $\leftarrow$ first(Q), Q $\leftarrow$ rest(Q) \\
         \If(){n is a goal state}{
             \Return{n}
         }

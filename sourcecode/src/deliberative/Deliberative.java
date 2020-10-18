@@ -1,5 +1,8 @@
 package deliberative;
 
+// Importing linked lists
+import java.util.LinkedList;
+
 /* import table */
 import logist.simulation.Vehicle;
 import logist.agent.Agent;
@@ -14,6 +17,20 @@ import logist.topology.Topology.City;
 /**
  * An optimal planner for one vehicle.
  */
+
+class State{
+	public logist.topology.Topology.City city;
+	public logist.task.TaskSet ctask;
+	public logist.task.TaskSet free_tasks;
+
+	public int cweight() {
+		return this.ctask.weightSum();
+	}
+	public State succ(){
+		return this;
+	}
+}
+
 public class Deliberative implements DeliberativeBehavior {
 
 	enum Algorithm { BFS, ASTAR }
@@ -70,6 +87,7 @@ public class Deliberative implements DeliberativeBehavior {
 		Plan plan = new Plan(current);
 
 		for (Task task : tasks) {
+			System.out.println("TASK!!!!!");
 			// move: current city => pickup location
 			for (City city : current.pathTo(task.pickupCity))
 				plan.appendMove(city);
