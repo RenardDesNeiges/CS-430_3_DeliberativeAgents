@@ -140,16 +140,18 @@ The \emph{goal} state is defined as any state where :
 \begin{algorithm}
     \SetAlgoLined
     \caption{Replanning Implementation}
-    \textbf{Initialization :} $p_{opt} = $ compute\_optimal\_plan(\emph{global.free\_tasks})  \\
+    \textbf{Initialization :} $p_{opt}\leftarrow $ compute\_optimal\_plan(\emph{global.free\_tasks})  \\
     \While(){goal not reached}{
         \If(){\emph{agent.free\_task} $\neq$ \emph{global.free\_tasks}}{
-            $p_{opt} =$ compute\_optimal\_plan(\emph{global.free\_tasks}) \\
+            $p_{opt} \leftarrow$ compute\_optimal\_plan(\emph{global.free\_tasks}) \\
             execute next action in $p_{opt}$
         }
         execute next action in $p_{opt}$
     }
 \end{algorithm}
 
+\section{ASTAR Heuristics Definition}
+?????
 
 \end{document}
 
