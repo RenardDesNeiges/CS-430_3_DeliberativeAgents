@@ -81,8 +81,32 @@ Where to cost of a plan is simply given by :
 
 \[cost(p) = \sum_{r \in \text{ roads in the plan}} cost(r)\]
 
-The \emph{goal} of our agent is to deliver all tasks on the map, all of these tasks as well as the length of every road and the cost per kilometer are known prior to planning. We will use \emph{BFS} and \emph{ASTAR} to find an optimal solution.
+The \emph{goal} of our agent is to deliver all tasks on the map, all of these tasks as well as the length of every road and the cost per kilometer are known prior to planning. \\
 
+Our agent has the ability to perform multiple tasks at the same time but has a maximum weight that it can carry, it has to verify : 
+
+\[\sum \text{carried tasks } \leq \text{ agent capacity}\]
+
+We will use \emph{BFS} and \emph{ASTAR} to find an optimal solution.
+
+\section{States, Transitions and Goals}
+
+Since we are working in a deliberative agent paradigm, we will not generate every possible state prior to planning, instead we will define states as a set of variables that are defined by our algorithm as it searches the solution space.
+
+\subsection{Transitions}
+
+Our agent can perform two basic actions 
+\begin{enumerate}
+    \item It can drive from one city to another
+    \item It can decide to pickup or not to pickup a task when it is in a given city
+\end{enumerate}
+We therefore construct our state representation around those two fundamental transitions :
+\begin{enumerate}
+    \item \textbf{drive(start, destination)} : the movement action between two \emph{adjacent} cities.
+    \subitem Cost function defined as : $cost_{drive}(road_{start,destination}) = l_{road} \cdot c_{kil} $
+    \item \textbf{pickup(task)} : the action of adding a contract to be carried by the agent
+    \subitem Cost function defined as : $cost_{pickup}=0$
+\end{enumerate}
 
 \end{document}
 

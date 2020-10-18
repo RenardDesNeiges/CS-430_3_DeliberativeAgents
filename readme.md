@@ -4,7 +4,7 @@
 Implementation of a planning deliberative agent with graph-search algorithms.
 
 ## Tasks from the problem definition :
-* **NOT DONE** Choose an adequate reprensentation of **states**, **transitions** and **goals** (final states), such that BFS or ASTAR will be able to find an optimal solution for the pickup and delivery problem ==> see docs/problemDefinition.pdf
+* **NOT DONE** Choose an adequate reprensentation of **states**, **transitions** and **goals** (final states), such that BFS or ASTAR will be able to find an optimal solution for the pickup and delivery problem ==> see doc/problemDefinition.pdf
 * **NOT DONE** Implement BFS and ASTAR, choose an algorithm and justify
 * **NOT DONE** Implement a deliberative agent that can use the above algorithms
 * **NOT DONE** Compare performance of ASTAR and BFS for various problem sizes
