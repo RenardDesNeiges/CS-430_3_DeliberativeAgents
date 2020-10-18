@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Stack;
 
+
 import deliberative.State.Act;
 
 
@@ -34,12 +35,13 @@ class State implements Comparable<State>{
 	public double cost;
 	public Act act;
 	public int depth;
+	private Boolean heuristic;
 	/*
 	 * Basic constructor
 	 */
 	public State(logist.topology.Topology.City city, 
 			LinkedList<Task> ctask, LinkedList<Task> free_tasks, 
-			State parent, double cost,Act act,int depth){
+			State parent, double cost,Act act,int depth,Boolean heuristic){
 		this.city = city;
 		this.ctask = ctask;
 		this.free_tasks = free_tasks;
@@ -47,6 +49,7 @@ class State implements Comparable<State>{
 		this.cost = cost;
 		this.act = act;
 		this.depth = depth;
+		this.heuristic = heuristic;
 
 	}
 
@@ -55,13 +58,14 @@ class State implements Comparable<State>{
 	 */
 	public State(logist.topology.Topology.City city, 
 			LinkedList<Task> ctask,
-			TaskSet free_tasks, State parent, double cost,Act act,int depth) {
+			TaskSet free_tasks, State parent, double cost,Act act,int depth,Boolean heuristic) {
 		this.city = city;
 		this.ctask = ctask;
 		this.parent = parent;
 		this.cost = cost;
 		this.act = act;
 		this.depth = depth;
+		this.heuristic = heuristic;
 			
 		//converting TaskSet to LinkedList<Task>
 		LinkedList<Task> lFreeTasks = new LinkedList<Task>();
@@ -72,12 +76,13 @@ class State implements Comparable<State>{
 	}
 
 	public State(logist.topology.Topology.City city, TaskSet ctask, TaskSet free_tasks, State parent,
-			double cost, Act act, int depth) {
+			double cost, Act act, int depth,Boolean heuristic) {
 		this.city = city;
 		this.parent = parent;
 		this.cost = cost;
 		this.act = act;
 		this.depth = depth;
+		this.heuristic = heuristic;
 
 		// converting TaskSet to LinkedList<Task>
 		LinkedList<Task> lFreeTasks = new LinkedList<Task>();
@@ -107,7 +112,10 @@ class State implements Comparable<State>{
 
 	public double heuristic(){
 		// C'est uNE hEUriSTIqUE (j'ai mis de constantes au bol, de façon heuristique tsais)
-		return 24000*this.free_tasks.size()+12000*this.ctask.size();
+		if(this.heuristic)
+			return 24000*this.free_tasks.size()+12000*this.ctask.size();
+		else
+			return 0;
 	}
 
 	/*
@@ -121,7 +129,7 @@ class State implements Comparable<State>{
 		for (City stop : topology) {
 			if (this.city.hasNeighbor(stop)) {
 				State nState = new State(stop, this.ctask, this.free_tasks, this,
-						this.cost + this.city.distanceTo(stop) * capacity,Act.MOVE,this.depth+1);
+						this.cost + this.city.distanceTo(stop) * capacity,Act.MOVE,this.depth+1,this.heuristic);
 				succ.push(nState);
 			}
 		}
@@ -137,7 +145,7 @@ class State implements Comparable<State>{
 				nFreeTasks = (LinkedList) this.free_tasks.clone();
 				nFreeTasks.remove(task);
 				
-				State nState = new State(this.city, nCTask, nFreeTasks, this, this.cost,Act.PICKUP,this.depth+1);
+				State nState = new State(this.city, nCTask, nFreeTasks, this, this.cost,Act.PICKUP,this.depth+1,this.heuristic);
 				succ.push(nState);
 			}
 		}
@@ -150,7 +158,7 @@ class State implements Comparable<State>{
 				nCTask = (LinkedList) this.ctask.clone();
 				nCTask.remove(task);
 
-				State nState = new State(this.city, nCTask, this.free_tasks, this, this.cost,Act.DELIVER,this.depth+1);
+				State nState = new State(this.city, nCTask, this.free_tasks, this, this.cost,Act.DELIVER,this.depth+1,this.heuristic);
 				succ.push(nState);
 			}
 		}
@@ -241,32 +249,11 @@ public class Deliberative implements DeliberativeBehavior {
 		return plan;
 	}
 
-	private State bfsAlgorithm(Vehicle vehicle, TaskSet tasks){
-		LinkedList<State> Q = new LinkedList<State>();
-		Q.add(new State(vehicle.getCurrentCity(), new LinkedList<Task>(), tasks, null, 0.0,Act.START,0)); //initializing the stack with the root node
-		while (Q.size()>0){
-		Collections.sort(Q);
-		State node = Q.removeFirst();
-		if(node.isGoal()){
-			return node;
-		}
-		//Pushing the new states into the stack
-		Stack<State> newStates = node.succ(this.topology, this.capacity);
-
-		for (State st : newStates) {
-			Q.add(st);
-		}
-		System.out.println("depth : " + node.depth + "; free-tasks: " + node.free_tasks.size()+ "; ctasks : " + node.ctask.size() );
-
-	}
-		return null;
-	}
-
-	private State astarAlgorithm(Vehicle vehicle, TaskSet tasks) {
+	private State astarAlgorithm(Vehicle vehicle, TaskSet tasks,Boolean heuristic) {
 		LinkedList<State> Q = new LinkedList<State>();
 		int dpth = 0;
 
-		Q.add(new State(vehicle.getCurrentCity(), this.planInitTasks, tasks, null, 0.0, Act.START, 0)); // initializing the stack with the root node
+		Q.add(new State(vehicle.getCurrentCity(), this.planInitTasks, tasks, null, 0.0, Act.START, 0, heuristic)); // initializing the stack with the root node
 		while (Q.size() > 0) {
 			Collections.sort(Q);
 			State node = Q.removeFirst();
@@ -327,13 +314,13 @@ public class Deliberative implements DeliberativeBehavior {
 	}
 	
 	private Plan astarPlanGenerator(Vehicle vehicle, TaskSet tasks) {
-		Plan plan = backtrack(astarAlgorithm(vehicle, tasks));
+		Plan plan = backtrack(astarAlgorithm(vehicle, tasks,true));
 		System.out.println(plan);
 		return plan;
 	}
 
 	private Plan bfsPlanGenerator(Vehicle vehicle, TaskSet tasks) {
-		Plan plan = backtrack(bfsAlgorithm(vehicle, tasks));
+		Plan plan = backtrack(astarAlgorithm(vehicle, tasks, false));
 		System.out.println(plan);
 		return plan;
 	}
