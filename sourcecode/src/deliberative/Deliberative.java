@@ -21,12 +21,13 @@ import logist.topology.Topology.City;
 
 class State{
 	public logist.topology.Topology.City city;
-	public logist.task.TaskSet ctask;
-	public logist.task.TaskSet free_tasks;
+	public LinkedList<Task> ctask;
+	public LinkedList<Task> free_tasks;
 	public State parent;
 	public double cost;
 
-	public State(logist.topology.Topology.City city, logist.task.TaskSet ctask, logist.task.TaskSet free_tasks, 
+	public State(logist.topology.Topology.City city, 
+			LinkedList<Task> ctask, LinkedList<Task> free_tasks, 
 			State parent, double cost){
 		this.city = city;
 		this.ctask = ctask;
@@ -35,28 +36,82 @@ class State{
 		this.cost = cost;
 	}
 
-	public int cweight() {
-		return this.ctask.weightSum();
+	public State(logist.topology.Topology.City city, 
+			LinkedList<Task> ctask,
+			TaskSet free_tasks, State parent, double cost) {
+		this.city = city;
+		this.ctask = ctask;
+		this.parent = parent;
+		this.cost = cost;
+			
+		//converting TaskSet to LinkedList<Task>
+		LinkedList<Task> lFreeTasks = new LinkedList<Task>();
+		for(Task tsk : free_tasks){
+			lFreeTasks.add(tsk);
+		}
+		this.free_tasks = lFreeTasks;
 	}
 
+	public long cweight() {
+		long	sum = 0;
+		for(Task task :this.ctask){
+			sum = sum + task.weight;
+		}
+		return sum;
+	}
+
+	/*
+		This function generates all possible states the agent 
+			my transition to from a given start state 
+			(the successors on the graph)
+	*/
 	public LinkedList<State> succ(Topology topology,int capacity){
 		LinkedList<State> succ = new LinkedList<State>();
 		
 		//generating movement actions
 		for (City stop : topology) {
 			if(this.city.hasNeighbor(stop)){
-				State nState = new State(stop, this.ctask, this.free_tasks, this, this.cost+this.city.distanceTo(stop)* capacity); // Implement cost function
+				State nState = new State(stop, this.ctask, this.free_tasks, this, this.cost+this.city.distanceTo(stop)* capacity);
 				succ.add(nState);
 			}
 		}
 		//generating pickup actions
+		for (Task task : this.free_tasks) {
+			//checking wether or not the task is possible to pickup in the state
+			if(task.pickupCity == this.city && task.weight<(capacity - this.cweight())){
+
+				LinkedList nCTask = new LinkedList();
+				nCTask = (LinkedList) this.ctask.clone();
+				nCTask.add(task);
+				LinkedList nFreeTasks = new LinkedList();
+				nFreeTasks = (LinkedList) this.free_tasks.clone();
+				nFreeTasks.remove(task);
+				
+				State nState = new State(this.city, nCTask, nFreeTasks, this, this.cost);
+				succ.add(nState);
+			}
+		}
+
+		//generating delivery actions
+		for (Task task : this.ctask) {
+			if (task.deliveryCity == this.city) {
+
+				LinkedList nCTask = new LinkedList();
+				nCTask = (LinkedList) this.ctask.clone();
+				nCTask.remove(task);
+
+				State nState = new State(this.city, nCTask, this.free_tasks, this, this.cost);
+				succ.add(nState);
+			}
+		}
+
 
 		return succ;
 	}
 
 	@Override
 	public String toString() {
-		return this.city + ", cost:" + this.cost;
+		return this.city + ": cost:" + this.cost;
 	}
 
 }
@@ -122,7 +177,8 @@ public class Deliberative implements DeliberativeBehavior {
 
 		///// TESTING ENV
 		///////////////////////////////////////////////////////////////////////////////////////////
-		State testState = new State(vehicle.getCurrentCity(), null, null, null, 0);
+		System.out.println("Current city is : " + vehicle.getCurrentCity());
+		State testState = new State(vehicle.getCurrentCity(), new LinkedList<Task>(), tasks, null, 0);
 		System.out.println(testState.succ(this.topology, agent.vehicles().get(0).capacity()));
 		///////////////////////////////////////////////////////////////////////////////////////////
 		for (Task task : tasks) {

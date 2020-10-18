@@ -15,7 +15,7 @@ Implementation of a planning deliberative agent with graph-search algorithms.
 * Define states, transitions and goals representations in doc **DONE**
 * Implement the agent
   * **DONE(kinda)** Implement the state class
-  * **NOT DONE** The succ function for a given state class
+  * **DONE** The succ function for a given state class
   * **NOT DONE** goal detection
   * **NOT DONE** Plan generation from states
 * Write a report
