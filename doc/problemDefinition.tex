@@ -100,7 +100,7 @@ The states the agent can be in are defined by the following variables, for a giv
     \item \textbf{agent.position} : the city a given agent is in
     \item \textbf{agent.ctasks} : the list of all tasks carried by the agent in a given state
     \item \textbf{agent.cweight} : the total weight carried by the agent in a given state
-    \item \textbf{free\_tasks} : the complete list of all undelivered, not yet picked-up tasks at a given state
+    \item \textbf{agent.free\_tasks} : the complete list of all undelivered, not yet picked-up tasks at a given state
 \end{enumerate}
 
 \subsection{Transitions}
@@ -120,7 +120,7 @@ We therefore construct our state representation around those three fundamental t
     \item \textbf{pickup(task)} : the action of adding a task to be carried by the agent
     \subitem \emph{Cost function} defined as : $cost_{pickup}=0$
     \subitem \emph{Possible} $\iff$ the agent is in the city where \emph{task} is and if \[\textit{agent.cweight}+\text{ w$_{task}$} \leq \text{ capacity}\]
-    \subitem \emph{Consequences} : agent appends \emph{task} to \emph{agent.ctasks} and adds the weight $w_{task}$ of the new task to \emph{agent.cweight}, \emph{task} is removed from \emph{free\_tasks}
+    \subitem \emph{Consequences} : agent appends \emph{task} to \emph{agent.ctasks} and adds the weight $w_{task}$ of the new task to \emph{agent.cweight}, \emph{task} is removed from \emph{agent.free\_tasks}
     \item \textbf{deliver(task)} : the action of delivering a task carried by the agent to it's destination
     \subitem \emph{Cost function} defined as : $cost_{deliver}=0$
     \subitem \emph{Possible} $\iff$ the agent is in the city where \emph{task} should be delivered
@@ -130,7 +130,26 @@ We therefore construct our state representation around those three fundamental t
 \subsection{Goal}
 
 The \emph{goal} state is defined as any state where :
-\[\text{free\_tasks } = \emptyset\]
+\[\text{agent.free\_tasks } = \emptyset\]
+
+\section{Implementation of the re-planning algorithm}
+
+\textbf{Problem: }if every agent has it's own \emph{agent.free\_tasks} data-structure, it will not be able to cope with the fact that some other agent may take a task and remove it from the actual list of free tasks.\\
+\textbf{Solution: }check at each state wether or not the free tasks have been modified, if it is the case, replan accordingly. This is essentially what the \emph{Basic agent logic} algorithm suggests but this is a somewhat more detailed implementation:
+
+\begin{algorithm}
+    \SetAlgoLined
+    \caption{Replanning Implementation}
+    \textbf{Initialization :} $p_{opt} = $ compute\_optimal\_plan(\emph{global.free\_tasks})  \\
+    \While(){goal not reached}{
+        \If(){\emph{agent.free\_task} $\neq$ \emph{global.free\_tasks}}{
+            $p_{opt} =$ compute\_optimal\_plan(\emph{global.free\_tasks}) \\
+            execute next action in $p_{opt}$
+        }
+        execute next action in $p_{opt}$
+    }
+\end{algorithm}
+
 
 \end{document}
 
