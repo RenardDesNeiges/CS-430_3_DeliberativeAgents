@@ -1,1 +1,1 @@
-java -jar ../logist/logist.jar config/deliberative.xml deliberative-main
+java -jar ../logist/logist.jar config/deliberative.xml deliberative-main deliberative-random

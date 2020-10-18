@@ -71,6 +71,29 @@ class State implements Comparable<State>{
 		this.free_tasks = lFreeTasks;
 	}
 
+	public State(logist.topology.Topology.City city, TaskSet ctask, TaskSet free_tasks, State parent,
+			double cost, Act act, int depth) {
+		this.city = city;
+		this.parent = parent;
+		this.cost = cost;
+		this.act = act;
+		this.depth = depth;
+
+		// converting TaskSet to LinkedList<Task>
+		LinkedList<Task> lFreeTasks = new LinkedList<Task>();
+		for (Task tsk : free_tasks) {
+			lFreeTasks.add(tsk);
+		}
+		LinkedList<Task> lCTask = new LinkedList<Task>();
+		if(ctask != null){
+			for (Task tsk : ctask) {
+				lCTask.add(tsk);
+			}
+		}
+		this.ctask = lCTask;
+		this.free_tasks = lFreeTasks;
+	}
+
 	/*
 	 * Compute the weight carried by the agent in this state
 	 */
@@ -171,6 +194,7 @@ public class Deliberative implements DeliberativeBehavior {
 	/* the properties of the agent */
 	Agent agent;
 	int capacity;
+	TaskSet planInitTasks;
 
 	/* the planning class */
 	Algorithm algorithm;
@@ -181,7 +205,7 @@ public class Deliberative implements DeliberativeBehavior {
 		this.td = td;
 		this.agent = agent;
 
-
+		this.planInitTasks = null;
 		
 		
 		// initialize the planner
@@ -201,16 +225,18 @@ public class Deliberative implements DeliberativeBehavior {
 
 		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
+
 		case ASTAR:
-			// ...
 			plan = astarPlanGenerator(vehicle, tasks);
 			break;
+			
 		case BFS:
-			// ...
-			plan = astarPlanGenerator(vehicle, tasks);
+			plan = bfsPlanGenerator(vehicle, tasks);
 			break;
+			
 		default:
 			throw new AssertionError("Should not happen.");
+			
 		}		
 		return plan;
 	}
@@ -240,7 +266,7 @@ public class Deliberative implements DeliberativeBehavior {
 		LinkedList<State> Q = new LinkedList<State>();
 		int dpth = 0;
 
-		Q.add(new State(vehicle.getCurrentCity(), new LinkedList<Task>(), tasks, null, 0.0, Act.START, 0)); // initializing the stack with the root node
+		Q.add(new State(vehicle.getCurrentCity(), this.planInitTasks, tasks, null, 0.0, Act.START, 0)); // initializing the stack with the root node
 		while (Q.size() > 0) {
 			Collections.sort(Q);
 			State node = Q.removeFirst();
@@ -303,87 +329,20 @@ public class Deliberative implements DeliberativeBehavior {
 	private Plan astarPlanGenerator(Vehicle vehicle, TaskSet tasks) {
 		Plan plan = backtrack(astarAlgorithm(vehicle, tasks));
 		System.out.println(plan);
-		///// TESTING ENV
-		///////////////////////////////////////////////////////////////////////////////////////////
-
-		///////////////////////////////////////////////////////////////////////////////////////////
-		/*for (Task task : tasks) {
-			// move: current city => pickup location
-			for (City city : current.pathTo(task.pickupCity))
-				plan.appendMove(city);
-
-			plan.appendPickup(task);
-
-			// move: pickup location => delivery location
-			for (City city : task.path())
-				plan.appendMove(city);
-
-			plan.appendDelivery(task);
-
-			// set current city
-			current = task.deliveryCity;
-		}*/
 		return plan;
 	}
 
 	private Plan bfsPlanGenerator(Vehicle vehicle, TaskSet tasks) {
-		City current = vehicle.getCurrentCity();
-		Plan plan = new Plan(current);
-
-		///// TESTING ENV
-		///////////////////////////////////////////////////////////////////////////////////////////
-		backtrack(bfsAlgorithm(vehicle, tasks));
-
-		///////////////////////////////////////////////////////////////////////////////////////////
-		for (Task task : tasks) {
-			// move: current city => pickup location
-			for (City city : current.pathTo(task.pickupCity))
-				plan.appendMove(city);
-
-			plan.appendPickup(task);
-
-			// move: pickup location => delivery location
-			for (City city : task.path())
-				plan.appendMove(city);
-
-			plan.appendDelivery(task);
-
-			// set current city
-			current = task.deliveryCity;
-		}
-		return plan;
-	}
-	
-	private Plan naivePlan(Vehicle vehicle, TaskSet tasks) {
-		City current = vehicle.getCurrentCity();
-		Plan plan = new Plan(current);
-
-		for (Task task : tasks) {
-			// move: current city => pickup location
-			for (City city : current.pathTo(task.pickupCity))
-				plan.appendMove(city);
-
-			plan.appendPickup(task);
-
-			// move: pickup location => delivery location
-			for (City city : task.path())
-				plan.appendMove(city);
-
-			plan.appendDelivery(task);
-
-			// set current city
-			current = task.deliveryCity;
-		}
+		Plan plan = backtrack(bfsAlgorithm(vehicle, tasks));
+		System.out.println(plan);
 		return plan;
 	}
 
 	@Override
 	public void planCancelled(TaskSet carriedTasks) {
-		
+		System.out.println("PLAN IS FUCKED, recomputing....");
 		if (!carriedTasks.isEmpty()) {
-			// This cannot happen for this simple agent, but typically
-			// you will need to consider the carriedTasks when the next
-			// plan is computed.
+			this.planInitTasks = carriedTasks;
 		}
 	}
 }
