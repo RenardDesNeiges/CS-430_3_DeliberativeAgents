@@ -113,7 +113,7 @@ class State implements Comparable<State>{
 	public double heuristic(){
 		// C'est uNE hEUriSTIqUE (j'ai mis de constantes au bol, de façon heuristique tsais)
 		if(this.heuristic)
-			return 24000*this.free_tasks.size()+12000*this.ctask.size();
+			return 600*this.free_tasks.size()+300*this.ctask.size();
 		else
 			return 0;
 	}
@@ -129,7 +129,7 @@ class State implements Comparable<State>{
 		for (City stop : topology) {
 			if (this.city.hasNeighbor(stop)) {
 				State nState = new State(stop, this.ctask, this.free_tasks, this,
-						this.cost + this.city.distanceTo(stop) * capacity,Act.MOVE,this.depth+1,this.heuristic);
+						this.cost + this.city.distanceTo(stop),Act.MOVE,this.depth+1,this.heuristic);
 				succ.push(nState);
 			}
 		}
@@ -219,7 +219,6 @@ public class Deliberative implements DeliberativeBehavior {
 		// initialize the planner
 		this.capacity = agent.vehicles().get(0).capacity();
 		String algorithmName = agent.readProperty("algorithm", String.class, "ASTAR");
-
 		
 		// Throws IllegalArgumentException if algorithm is unknown
 		algorithm = Algorithm.valueOf(algorithmName.toUpperCase());
