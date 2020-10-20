@@ -1,28 +1,27 @@
 package deliberative;
 
-import java.util.Collections;
-// Importing java utils
 import java.util.LinkedList;
 import java.util.Stack;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Stack;
+import java.lang.Math;
 
-import deliberative.State.Act;
-
-
-/* import table */
-import logist.simulation.Vehicle;
 import logist.agent.Agent;
 import logist.behavior.DeliberativeBehavior;
 import logist.plan.Plan;
+/* import table */
+import logist.simulation.Vehicle;
 import logist.task.Task;
 import logist.task.TaskDistribution;
 import logist.task.TaskSet;
 import logist.topology.Topology;
 import logist.topology.Topology.City;
-
-/**
- * An optimal planner for one vehicle.
- */
+import logist.task.Task;
+import logist.task.TaskSet;
+import logist.topology.Topology;
+import logist.topology.Topology.City;
 
 class State implements Comparable<State>{
 	enum Act {
@@ -240,7 +239,7 @@ class State implements Comparable<State>{
 		Double cst = this.cost+this.heuristic();
 		return cst.compareTo(cmp.cost+cmp.heuristic());
 	}
-}
+}	
 
 public class Deliberative implements DeliberativeBehavior {
 
@@ -412,4 +411,5 @@ public class Deliberative implements DeliberativeBehavior {
 		}
 	}
 }
+
 
