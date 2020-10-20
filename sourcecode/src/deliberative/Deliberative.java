@@ -379,7 +379,6 @@ public class Deliberative implements DeliberativeBehavior {
 				plan.appendMove(path.get(i).city);
 			}
 			else if(path.get(i).act == State.Act.PICKUP){
-				System.out.print("Picked up ");
 				plan.appendPickup(path.get(i).ctask.getLast());
 			}
 			else if(path.get(i).act == State.Act.DELIVER){
@@ -391,19 +390,21 @@ public class Deliberative implements DeliberativeBehavior {
 	
 	private Plan astarPlanGenerator(Vehicle vehicle, TaskSet tasks) {
 		Plan plan = backtrack(astarAlgorithm(vehicle, tasks,true));
+		System.out.println(vehicle.name()+"'s plan");
 		System.out.println(plan);
 		return plan;
 	}
 
 	private Plan bfsPlanGenerator(Vehicle vehicle, TaskSet tasks) {
 		Plan plan = backtrack(astarAlgorithm(vehicle, tasks, false));
+		System.out.println(vehicle.name()+"'s plan");
 		System.out.println(plan);
 		return plan;
 	}
 
 	@Override
 	public void planCancelled(TaskSet carriedTasks) {
-		System.out.println("Plan not feasible anymore, recomputing....");
+		System.out.println(agent.vehicles().get(0).name()+ "'s plan not feasible anymore, recomputing....");
 		if (!carriedTasks.isEmpty()) {
 			this.planInitTasks = carriedTasks;
 		}
