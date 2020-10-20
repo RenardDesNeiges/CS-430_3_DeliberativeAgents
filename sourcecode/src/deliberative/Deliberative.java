@@ -321,21 +321,23 @@ public class Deliberative implements DeliberativeBehavior {
 	}
 
 	private State astarAlgorithm(Vehicle vehicle, TaskSet tasks,Boolean heuristic) {
+
+		
 		LinkedList<State> Q = new LinkedList<State>();
 		LinkedList<State> C = new LinkedList<State>();
 		int dpth = 0;
 		int qsize = 0;
 		
-		if(heuristic)
-			System.out.println("Running A*");
-		else
-			System.out.println("Running BFS");
+		//if(heuristic)
+			//System.out.println("Running A*");
+		//else
+			//System.out.println("Running BFS");
 
 		Q.add(new State(vehicle.getCurrentCity(), this.planInitTasks, tasks, null, 0.0, State.Act.START, 0, heuristic)); // initializing the stack with the root node
 		while (Q.size() > 0) {
-			qsize = Q.size();
-			if(qsize%500 == 0)
-				System.out.println("Size of Q: " + Q.size());
+			//qsize = Q.size();
+			//if(qsize%500 == 0)
+				//System.out.println("Size of Q: " + Q.size());
 			
 			State node = Q.removeFirst();
 			
@@ -360,8 +362,6 @@ public class Deliberative implements DeliberativeBehavior {
 				dpth = node.depth;
 			}
 		}
-		
-		System.out.println("A* terminated");
 		
 		return null;
 	}
@@ -389,14 +389,25 @@ public class Deliberative implements DeliberativeBehavior {
 	}
 	
 	private Plan astarPlanGenerator(Vehicle vehicle, TaskSet tasks) {
+		long t0 = System.currentTimeMillis();
 		Plan plan = backtrack(astarAlgorithm(vehicle, tasks,true));
+		long t1 = System.currentTimeMillis();
+		long dt = t1 - t0;
+		System.out.println(dt);
+		System.out.println("A* terminated");
+
 		System.out.println(vehicle.name()+"'s plan");
 		System.out.println(plan);
 		return plan;
 	}
 
 	private Plan bfsPlanGenerator(Vehicle vehicle, TaskSet tasks) {
+		long t0 = System.currentTimeMillis();
 		Plan plan = backtrack(astarAlgorithm(vehicle, tasks, false));
+		long t1 = System.currentTimeMillis();
+		long dt = t1 - t0;
+		System.out.println(dt);
+		
 		System.out.println(vehicle.name()+"'s plan");
 		System.out.println(plan);
 		return plan;
