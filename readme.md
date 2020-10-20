@@ -19,9 +19,10 @@ Implementation of a planning deliberative agent with graph-search algorithms.
   * **DONE** The succ function for a given state class
   * **DONE** goal detection
   * **DONE** Plan generation from states
-  * **NOT DONE** some way to solve using BFS which is not atrocious
-  * **NOT DONE** implement a heuristic function that makes more sense or at least justify why the fuck it workds how it does not
-  *  **DONE** re-planning
+  * **DONE** some way to solve using BFS which is not atrocious
+  * **DONE** implement a heuristic function that makes more sense or at least justify why the fuck it workds how it does not
+  * **DONE** re-planning
   * **DONE** Run the simulation with several agents ==> it works
-  * **NOT DONE** Think of a way of exporting data to quantify performance
-* Write a report
+  * **NOT DONE** Find the max number of tasks for which one can estiblish a plan in 1 min for BFS and for ASTAR
+  * **NOT DONE** Run avec 6 tasks, 1 agent, 2 agent, 3 agents
+* Write a report **Kind of Done**

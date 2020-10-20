@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<history configuration="config\deliberative.xml">
+<history configuration="config/deliberative.xml">
 	<agents>
 		<agent name="deliberative-1">
 			<vehicle name="Vehicle 1"/>
+		</agent>
+		<agent name="deliberative-2">
+			<vehicle name="Vehicle 2"/>
+		</agent>
+		<agent name="deliberative-3">
+			<vehicle name="Vehicle 3"/>
