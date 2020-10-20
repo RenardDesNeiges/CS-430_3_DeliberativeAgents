@@ -103,7 +103,7 @@ class State implements Comparable<State>{
 	 * Compute the weight carried by the agent in this state
 	 */
 	public long cweight() {
-		long	sum = 0;
+		long sum = 0;
 		for(Task task :this.ctask){
 			sum = sum + task.weight;
 		}
@@ -215,6 +215,8 @@ public class Deliberative implements DeliberativeBehavior {
 
 		this.planInitTasks = null;
 		
+		System.out.println("Running Setup");
+		
 		
 		// initialize the planner
 		this.capacity = agent.vehicles().get(0).capacity();
@@ -223,12 +225,14 @@ public class Deliberative implements DeliberativeBehavior {
 		// Throws IllegalArgumentException if algorithm is unknown
 		algorithm = Algorithm.valueOf(algorithmName.toUpperCase());
 		
-		// ...
+		System.out.println("Setup Done");
 	}
 	
 	@Override
 	public Plan plan(Vehicle vehicle, TaskSet tasks) {
 		Plan plan;
+		
+		System.out.println("Generating Plan");
 
 		// Compute the plan with the selected algorithm.
 		switch (algorithm) {
@@ -242,37 +246,47 @@ public class Deliberative implements DeliberativeBehavior {
 			break;
 			
 		default:
-			throw new AssertionError("Should not happen.");
+			throw new AssertionError("Algorithm not defined.");
 			
-		}		
+		}
+		
+		System.out.println("Plan Generated");
 		return plan;
 	}
 
 	private State astarAlgorithm(Vehicle vehicle, TaskSet tasks,Boolean heuristic) {
 		LinkedList<State> Q = new LinkedList<State>();
 		int dpth = 0;
+		
+		System.out.println("Running A*");
 
 		Q.add(new State(vehicle.getCurrentCity(), this.planInitTasks, tasks, null, 0.0, Act.START, 0, heuristic)); // initializing the stack with the root node
 		while (Q.size() > 0) {
+			System.out.println("Size of Q: " + Q.size());
 			Collections.sort(Q);
 			State node = Q.removeFirst();
+			System.out.println("Current node :" + node.toString());
+			System.out.println("Current heuristic :" + node.heuristic());
 			if (node.isGoal()) {
 				return node;
 			}
 			// Pushing the new states into the stack
 			Stack<State> newStates = node.succ(this.topology, this.capacity);
+			System.out.println("Size of neighbour: " + newStates.size());
 
 			for (State st : newStates) {
 				Q.add(st);
 			}
-			double val = node.cost+node.heuristic();
+			//double val = node.cost+node.heuristic();
 			/*System.out.println("depth : " + node.depth + "; free-tasks: " + node.free_tasks.size() + "; ctasks : "
 					+ node.ctask.size() + "; h : " + val );*/
 			if (node.depth > dpth) {
 				dpth = node.depth;
 			}
-
 		}
+		
+		System.out.println("A* terminated");
+		
 		return null;
 	}
 
