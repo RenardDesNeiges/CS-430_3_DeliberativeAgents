@@ -24,7 +24,7 @@ import logist.topology.Topology.City;
  * An optimal planner for one vehicle.
  */
 
-public class State implements Comparable<State>{
+class State implements Comparable<State>{
 	enum Act {
 		MOVE, PICKUP, DELIVER, START
 	}
@@ -378,8 +378,8 @@ public class Deliberative implements DeliberativeBehavior {
 			else if(path.get(i).act == Act.DELIVER){
 				System.out.println(path.get(i+1).ctask);
 				System.out.print("Delivered ");
-				for (Task tsk : path.get(i).ctask) {
-					System.out.println(tsk+ " // " + path.get(i).city);
+				for (Task tsk : path.get(i+1).ctask) {
+					//System.out.println(tsk+ " // " + path.get(i).city);
 					if (tsk.deliveryCity == path.get(i).city) {
 						System.out.println(tsk);
 						plan.appendDelivery(tsk);
@@ -412,3 +412,4 @@ public class Deliberative implements DeliberativeBehavior {
 		}
 	}
 }
+

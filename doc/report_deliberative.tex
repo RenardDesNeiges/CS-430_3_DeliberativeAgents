@@ -5,6 +5,7 @@
 \usepackage[top=0.8in, bottom=0.8in, left=0.8in, right=0.8in]{geometry}
 % Add other packages here %
 
+\usepackage[ruled,vlined]{algorithm2e}
 
 % Put your group number and names in the author field %
 \title{\bf Excercise 3\\ Implementing a deliberative Agent}
@@ -18,20 +19,25 @@
 \maketitle
 
 \section{Model Description}
-The problem studied in this report is once again the pickup and delivery problem. This time, our goal is to implement a deliberative agent. This agent establishes a complete plan before doing anything. The plan is supposed to render the best efficiency in terms of cost to deliver the given tasks. Once the plan is established, the agent will act accordingly. If only one agent is present on the tracks, the agent will execute the plan in its entirety and will stop, as nothing has to be done anymore. If two or more agents are present, it can be that one agent disrupt the plan of the other. What happens in that case is that the agent which finds its plan unexecutable will compute one once again with updated informations about the environement when encountering an undoable action (ex: picking up a contract that has already been picked up by an other agent earlier). To establish the plan, we will use research algorithms \emph{BFS} and \emph{A*} on trees. The nodes of the trees will be implemented by the class \emph{State}.
+% The problem studied in this report is once again the pickup and delivery problem. This time, our goal is to implement a deliberative agent. This agent establishes a complete plan before doing anything. The plan is supposed to render the best efficiency in terms of cost to deliver the given tasks. Once the plan is established, the agent will act accordingly. If only one agent is present on the tracks, the agent will execute the plan in its entirety and will stop, as nothing has to be done anymore. If two or more agents are present, it can be that one agent disrupt the plan of the other. What happens in that case is that the agent which finds its plan unexecutable will compute one once again with updated informations about the environement when encountering an undoable action (ex: picking up a contract that has already been picked up by an other agent earlier). To establish the plan, we will use research algorithms \emph{BFS} and \emph{A*} on trees. The nodes of the trees will be implemented by the class \emph{State}.% 
+
 \subsection{Intermediate States}
 % Describe the state representation %
 Here we integrated the intermediate states with the following attributes:
 \begin{itemize}
 	\item[$\bullet$] logist.topology.Topology.City \emph{city}, the city the agent is currently in,
-	\item[$\bullet$] LinkedList$<$Task$>$ \emph{ctask}, that represent the list of tasks the agent has picked up. Note that the elements of the list also have 2 attributes : $pickupCity$ that represents the city the agent can pickup the contract at, $deliveryCity$ that represents the city the agent must deliver the contract at, $weight$ that represents the weight of the contract,
-	\item[$\bullet$] LinkedList$<$Task$>$ \emph{free\_tasks}, that represents the list of tasks that have not been picked up yet. The elements of the list have the same attributes as in the list mentionned before,
-	\item[$\bullet$] State \emph{parent}, that is the predecessor of the current state. This will be used after the application of the \emph{BFS} and \emph{A*} algorithms to build back the plan from the goal state we find using those algorithms,
-	\item[$\bullet$] double \emph{cost}, that is equal to the sum of all steps needed to get to the state, 
-	\item[$\bullet$] Act \emph{act}, represents the action taken at the given state. This value can vary between \emph{START}, \emph{PICKUP}, \emph{MOVE} and \emph{DELIVER}. The meaning of these actions will be given in a section below.
-	\item[$\bullet$] int \emph{depth}, that represents the depth of the nodes in the tree,
-	\item[$\bullet$] Boolean \emph{heuristic}, that represents the method used by the search algorithm. If $heuristic=true$, then the \emph{A*} algorithm is used. Otherwise the \emph{BFS} algorithm is used.
+	\item[$\bullet$] LinkedList$<$Task$>$ \emph{ctask} (default value = $empty$), that represent the list of tasks the agent has picked up. Note that the elements of the list also have 3 attributes : $pickupCity$ that represents the city the agent can pick up the contract at, $deliveryCity$ that represents the city the agent must deliver the contract at, and $weight$ that represents the weight of the contract,
+	\item[$\bullet$] LinkedList$<$Task$>$ \emph{free\_tasks} (default value = $tasks\ present\ in\ the\ environement$), that represents the list of tasks that have not been picked up yet. The elements of the list have the same attributes as in the list mentionned before,
+	\item[$\bullet$] State \emph{parent} (default value = $null$) is the predecessor of the current state. This will be used after the application of the \emph{BFS} and \emph{A*} algorithms to build back the plan from the goal state we find using those algorithms,
+	\item[$\bullet$] double \emph{cost} (default value = $0$), that is equal to the sum of all steps needed to get to the state, 
+	\item[$\bullet$] Act \emph{act} (default value = $START$), represents the action taken at the given state. This value can vary between \emph{START}, \emph{PICKUP}, \emph{MOVE} and \emph{DELIVER}. The meaning of these actions will be given in a section below.
+	\item[$\bullet$] int \emph{depth} (default value = $0$), that represents the depth of the nodes in the tree,
+	\item[$\bullet$] Boolean \emph{heuristic}, that represents the method used by the search algorithm. If $heuristic=true$, then the \emph{A*} algorithm is used. Otherwise the \emph{BFS} algorithm is used,
+	\item[$\bullet$] a method long $cweight()$, that returns the sum of the weight of the current tasks.
+	\item[$\bullet$] a method Stack$<$State$>$ $succ(\mathrm{int}\ capacity) $, that returns all the possbile children of the current node, where the parameter is the maximal capacity of an agent.
 \end{itemize}
+
+Note that we also have a constant called $capacity$ stored in the $Deliberative$ class (see below) that represents the maximal weight that can be loaded into an agent. This constant will be passed in the succesor function each time it is called.
 
 \subsection{Goal State}
 % Describe the goal state %
@@ -39,7 +45,7 @@ A goal state is defines as a state at wich all tasks have been picked up and del
 
 \subsection{Actions}
 % Describe the possible actions/transitions in your model %
-The agent has 4 different possiblities of action. An action is implemented by the $act$ variable and it defines what the chilren of a node can be. We provide a clearer explanation. Suppose we have a state $state$. We will only give the attributes that change, the rest is assumed to remain constant except for the $parent$ attribute that is set to $state$ and $depth$ that is set to $state.depth+1$ for the child. Note that all combination of mentioned cases can happen and thus we generate a child node for each individual possibility if not mentionned otherwise.
+The agent has 4 different possiblities of action. An action is implemented by the $act$ variable and it defines what the chilren of a node can be, i.e. the result of the succesor function. We provide a clearer explanation. Suppose we have a state $state$. We will only give the attributes that change, the rest is assumed to remain constant except for the $parent$ attribute that is set to $state$ and $depth$ that is set to $state.depth+1$ for the child. Note that all combination of mentioned cases can happen and thus we generate a child node for each individual possibility if not mentionned otherwise.
 \begin{itemize}
 	\item[$\bullet$] \underline{If $state.act=START$:} Then we can have 
 		\begin{align*}
@@ -49,12 +55,12 @@ The agent has 4 different possiblities of action. An action is implemented by th
 				       \end{cases}
 		\end{align*}
 		
-	\item[$\bullet$] \underline{If $state.act=PICKUP$:} Note that it means that we have that there exists $task\in state.free\_tasks$ such that $task.pickupCity=state.city$. Then we can have 
+	\item[$\bullet$] \underline{If $state.act=PICKUP$:} Note that it means that we have that there exists $task\in state.free\_tasks$ such that $task.pickupCity=state.city$ and $capacity-state.cweight()\geq task.weight$. Then we can have 
 		\begin{align*}
 			s'.ctask =& s.ctask.add(task),\\
 			s'.free\_tasks =& s.free\_tasks.remove(task),\\
 			s'.act =& \begin{cases}
-						PICKUP &,\ \mathrm{if}\ state.city\in\{task.pickupCity\ |\ task\in state.free\_tasks.remove(task)\},\\
+						PICKUP &,\ \mathrm{if}\ state.city\in\{task.pickupCity\ |\ task'\in state.free\_tasks.remove(task)\\ & \&\&\ capacity-state.cweight() - task.weight \geq task'.weight\},\\
 						MOVE &,\ \mathrm{in\ any\ case},\\
 						DELIVER &,\ \mathrm{if}\ state.city\in\{task.deliveryCity\ |\ task\in state.ctask\}.
 					\end{cases}
@@ -64,7 +70,8 @@ The agent has 4 different possiblities of action. An action is implemented by th
 		\begin{align*}
 			s'.ctask =& state.ctask.remove(task),\\
 			s'.act =& \begin{cases}
-						PICKUP &,\ \mathrm{if}\ state.city\in\{task'.pickupCity\ |\  task'\in state.free\_tasks\},\\
+						PICKUP &,\ \mathrm{if}\ state.city\in\{task'.pickupCity\ |\  task'\in state.free\_tasks\\
+						& \&\&\ capacity-state.cweight() + task.weight \geq task'.weight\},\\
 						MOVE &,\ \mathrm{in\ any\ case},\\
 						DELIVER &,\ \mathrm{if}\ state.city\in\{task.'pickupCity\ |\ task'\in state.ctask.remove(task)\}.
 					\end{cases}
@@ -76,18 +83,37 @@ The agent has 4 different possiblities of action. An action is implemented by th
 			s'.city =& city',\\
 			s'.cost =& state.cost+state.city.distanceTo(city'),\\
 			s'.act =& \begin{cases}
-						PICKUP &,\ \mathrm{if}\ city'\in\{task.pickupCity\ |\ task\in state.free\_tasks\},\\
+						PICKUP &,\ \mathrm{if}\ city'\in\{task.pickupCity\ |\ task\in state.free\_tasks\\
+								& \&\&\ capacity -state.cweight()\geq task.weight\},\\
 						MOVE &,\ \mathrm{in\ any\  case},\\
 						DELIVER  &, \mathrm{if}\ city'\in\{task.deliveryCity\ |\ task\in state.ctask\}.
 					\end{cases}
 		\end{align*}
 \end{itemize}
+
+Note that this generate a lot of nodes at each iteration. 
 			
 
 \section{Implementation}
-
-\subsection{BFS}
+We implemented those two algorithms in the $Deliberative$ class. We suppose that we begin at the city $city$.
+\subsection{BFS and A*}
 % Details of the BFS implementation %
+\begin{algorithm}[H]
+	\SetAlgoLined
+%	\Kwresult{A state $s$ goal with minimal cost for this property}
+	initialization: Set $Q$ a queue of $State$ objects with one element $state$ abd default value with $state.city = city$ and $state.heuristique = true$ if $A^*$ and $false$ if $BFS$\\
+	$s\leftarrow nil$\\
+	\While{$Q.size()\geq1$ and $s$ is not a goal state}{
+		$s\leftarrow Q.pop()$\\
+		$Q\leftarrow Q+succ(s)$\\
+		\If{s.heuristique}{
+			Q.sortBy(f)
+		}
+	
+	}
+	\Return $s$\caption{$BFS$ and $A^*$}
+\end{algorithm}
+				
 
 \subsection{A*}
 % Details of the A* implementation %
