@@ -31,10 +31,10 @@ Here we integrated the intermediate states with the following attributes:
 	\item[$\bullet$] State \emph{parent} (default value = $null$) is the predecessor of the current state. This will be used after the application of the \emph{BFS} and \emph{A*} algorithms to build back the plan from the goal state we find using those algorithms,
 	\item[$\bullet$] double \emph{cost} (default value = $0$), that is equal to the sum of all steps needed to get to the state, 
 	\item[$\bullet$] Act \emph{act} (default value = $START$), represents the action taken at the given state. This value can vary between \emph{START}, \emph{PICKUP}, \emph{MOVE} and \emph{DELIVER}. The meaning of these actions will be given in a section below.
-	\item[$\bullet$] int \emph{depth} (default value = $0$), that represents the depth of the nodes in the tree,
+	%\item[$\bullet$] int \emph{depth} (default value = $0$), that represents the depth of the nodes in the tree,
 	\item[$\bullet$] Boolean \emph{heuristic}, that represents the method used by the search algorithm. If $heuristic=true$, then the \emph{A*} algorithm is used. Otherwise the \emph{BFS} algorithm is used,
 	\item[$\bullet$] a method long $cweight()$, that returns the sum of the weight of the current tasks.
-	\item[$\bullet$] a method Stack$<$State$>$ $succ(\mathrm{int}\ capacity) $, that returns all the possbile children of the current node, where the parameter is the maximal capacity of an agent.
+	\item[$\bullet$] a method Stack$<$State$>$ $succ(\mathrm{Topology}\ topology,\mathrm{int}\ capacity) $, that returns all the possbile children of the current node, where the parameter is the maximal capacity of an agent.
 \end{itemize}
 
 Note that we also have a constant called $capacity$ stored in the $Deliberative$ class (see below) that represents the maximal weight that can be loaded into an agent. This constant will be passed in the succesor function each time it is called.
@@ -45,54 +45,53 @@ A goal state is defines as a state at wich all tasks have been picked up and del
 
 \subsection{Actions}
 % Describe the possible actions/transitions in your model %
-The agent has 4 different possiblities of action. An action is implemented by the $act$ variable and it defines what the chilren of a node can be, i.e. the result of the succesor function. We provide a clearer explanation. Suppose we have a state $state$. We will only give the attributes that change, the rest is assumed to remain constant except for the $parent$ attribute that is set to $state$ and $depth$ that is set to $state.depth+1$ for the child. Note that all combination of mentioned cases can happen and thus we generate a child node for each individual possibility if not mentionned otherwise.
-\begin{itemize}
-	\item[$\bullet$] \underline{If $state.act=START$:} Then we can have 
-		\begin{align*}
-			s'.act &= \begin{cases}
-					 PICKUP &,\ \mathrm{if}\ state.city\in\{task.pickupCity\ |\ task\in state.free\_tasks\},\\
-					 MOVE &,\ \mathrm{in\ any\ case}.
-				       \end{cases}
-		\end{align*}
+The agent has 4 different possiblities of action. An action is implemented by the $act$ variable and it defines what the chilren of a node can be, i.e. the result of the succesor function. We provide a clearer explanation. Suppose we have a state $state$. We will only give the attributes that change, the rest is assumed to be directly inherited from the parent except for the $parent$ attribute that is set to $state$. Note that all combination of mentioned cases can happen and thus we generate a child node for each individual possibility if not mentionned otherwise.\\
+% \begin{itemize}
+%	\item[$\bullet$] \underline{If $state.act=START$:} Then we can have 
+%		\begin{align*}
+%					 PICKUP &,\ \mathrm{if}\ state.city\in\{task.pickupCity\ |\ task\in state.free\_tasks\},\\
+%					 MOVE &,\ \mathrm{in\ any\ case}.
+%				       \end{cases}
+%		\end{align*}
+If $state.act = START$, then we are at the very beggining of the simlation. We then have that $state.succ.capicity$ is the list of states that have either $PICKUP$, if a task can be picked at the given city, $MOVE$.\\
+If $state.act = PICKUP$, then we have that the children have their $ctask$ attribute set to $state.ctask.add(task)$, their $free\_tasks$ attribute to $state.free\_tasks.remove(task)$, where $task$ is the task picked up at that moment, and their $act$ attribute to either $PICKUP$, $MOVE$ or $DELIVER$ if possible.\\
+	%\item[$\bullet$] \underline{If $state.act=PICKUP$:} Note that it means that we have that there exists $task\in state.free\_tasks$ such that $task.pickupCity=state.city$ and $capacity-state.cweight()\geq task.weight$. Then we can have 
+		%\begin{align*}
+			%s'.ctask =& s.ctask.add(task),\\
+			%s'.free\_tasks =& s.free\_tasks.remove(task),\\
+			%s'.act =& \begin{cases}
+			%			PICKUP &,\ \mathrm{if}\ state.city\in\{task.pickupCity\ |\ task'\in state.free\_tasks.remove(task)\\ & \&\&\ capacity-state.cweight() - task.weight \geq task'.weight\},\\
+					%	MOVE &,\ \mathrm{in\ any\ case},\\
+				%		DELIVER &,\ \mathrm{if}\ state.city\in\{task.deliveryCity\ |\ task\in state.ctask\}.
+					%\end{cases}
+		%\end{align*}
+If $state.act = DELIVER$, then we have that the children must have their $ctask$ attribute set to $state.ctask.remover(task)$, where $task$ is the task being deliverd, and their $act$ attribute can either be set to $PICKUP, MOVE$ or $DELIVER$ according to the courant environnement.\\
+	%\item[$\bullet$] \underline{If $state.act=DELIVER$:} Note that this means that we have a task $task\in state.ctask$ such that $task.deliveryCity = state.city$. Then we can have
+		%\begin{align*}
+			%s'.ctask =& state.ctask.remove(task),\\
+			%s'.act =& \begin{cases}
+					%	PICKUP &,\ \mathrm{if}\ state.city\in\{task'.pickupCity\ |\  task'\in state.free\_tasks\\
+						%& \&\&\ capacity-state.cweight() + task.weight \geq task'.weight\},\\
+						%MOVE &,\ \mathrm{in\ any\ case},\\
+						%DELIVER &,\ \mathrm{if}\ state.city\in\{task.'pickupCity\ |\ task'\in state.ctask.remove(task)\}.
+			%		\end{cases}
+		%\end{align*}
 		
-	\item[$\bullet$] \underline{If $state.act=PICKUP$:} Note that it means that we have that there exists $task\in state.free\_tasks$ such that $task.pickupCity=state.city$ and $capacity-state.cweight()\geq task.weight$. Then we can have 
-		\begin{align*}
-			s'.ctask =& s.ctask.add(task),\\
-			s'.free\_tasks =& s.free\_tasks.remove(task),\\
-			s'.act =& \begin{cases}
-						PICKUP &,\ \mathrm{if}\ state.city\in\{task.pickupCity\ |\ task'\in state.free\_tasks.remove(task)\\ & \&\&\ capacity-state.cweight() - task.weight \geq task'.weight\},\\
-						MOVE &,\ \mathrm{in\ any\ case},\\
-						DELIVER &,\ \mathrm{if}\ state.city\in\{task.deliveryCity\ |\ task\in state.ctask\}.
-					\end{cases}
-		\end{align*}
-	
-	\item[$\bullet$] \underline{If $state.act=DELIVER$:} Note that this means that we have a task $task\in state.ctask$ such that $task.deliveryCity = state.city$. Then we can have
-		\begin{align*}
-			s'.ctask =& state.ctask.remove(task),\\
-			s'.act =& \begin{cases}
-						PICKUP &,\ \mathrm{if}\ state.city\in\{task'.pickupCity\ |\  task'\in state.free\_tasks\\
-						& \&\&\ capacity-state.cweight() + task.weight \geq task'.weight\},\\
-						MOVE &,\ \mathrm{in\ any\ case},\\
-						DELIVER &,\ \mathrm{if}\ state.city\in\{task.'pickupCity\ |\ task'\in state.ctask.remove(task)\}.
-					\end{cases}
-		\end{align*}
-		
-			
-	\item[$\bullet$] \underline{If $state.act=MOVE$}:  Then for each $city'$ such that $state.city.isNeighbour(city')$, we can have 
-		\begin{align*}
-			s'.city =& city',\\
-			s'.cost =& state.cost+state.city.distanceTo(city'),\\
-			s'.act =& \begin{cases}
-						PICKUP &,\ \mathrm{if}\ city'\in\{task.pickupCity\ |\ task\in state.free\_tasks\\
-								& \&\&\ capacity -state.cweight()\geq task.weight\},\\
-						MOVE &,\ \mathrm{in\ any\  case},\\
-						DELIVER  &, \mathrm{if}\ city'\in\{task.deliveryCity\ |\ task\in state.ctask\}.
-					\end{cases}
-		\end{align*}
-\end{itemize}
+If $state.act = MOVE$, then we that the children must have theire $city$ attribute set to some $city'$ in the neighbourhood of $state.city$ and their $cost$ attribute must be set to $state.cost+state,city.distanceTo(city')$. Their $act$ attribute can be either set at $PICKUP, MOVE$ or $DELIVER$ according to the courant environnement.	
+	%\item[$\bullet$] \underline{If $state.act=MOVE$}:  Then for each $city'$ such that $state.city.isNeighbour(city')$, we can have 
+		%\begin{align*}
+			%s'.city =& city',\\
+			%s'.cost =& state.cost+state.city.distanceTo(city'),\\
+			%s'.act =& \begin{cases}
+					%	PICKUP &,\ \mathrm{if}\ city'\in\{task.pickupCity\ |\ task\in state.free\_tasks\\
+						%		& \&\&\ capacity -state.cweight()\geq task.weight\},\\
+						%MOVE &,\ \mathrm{in\ any\  case},\\
+						%DELIVER  &, \mathrm{if}\ city'\in\{task.deliveryCity\ |\ task\in state.ctask\}.
+					%\end{cases}
+		%\end{align*}
+%\end{itemize}
 
-Note that this generate a lot of nodes at each iteration. 
-			
+Note that this generate a lot of nodes at each iteration. In practice, in the $A^*$  and $BFS$, we always choose the $DELIVER$ operation when it is possible. This reduces consequently the number of possible states at certain times. It seems also intuitive to deliver a task when said task has been picked up and the agent happens to pass through its delivery city. Not doing so would automaticaly be non-optimal. That is why this restriction actually helps us in the plan making process.
 
 \section{Implementation}
 We implemented those two algorithms in the $Deliberative$ class. We suppose that we begin at the city $city$.
@@ -101,26 +100,39 @@ We implemented those two algorithms in the $Deliberative$ class. We suppose that
 \begin{algorithm}[H]
 	\SetAlgoLined
 %	\Kwresult{A state $s$ goal with minimal cost for this property}
-	initialization: Set $Q$ a queue of $State$ objects with one element $state$ abd default value with $state.city = city$ and $state.heuristique = true$ if $A^*$ and $false$ if $BFS$\\
+	initialization: Set $Q$ a queue of $State$ objects with one element $state$ at default values with\\  
+	\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ $state.city = city$ and $state.heuristic = true$ if $A^*$ and $false$ if $BFS$ and set $C$ to\\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ be an empty queue.\\
 	$s\leftarrow nil$\\
-	\While{$Q.size()\geq1$ and $s$ is not a goal state}{
+	\While{$Q.size()\geq1$ and $s$ is not a goal state}{\\
 		$s\leftarrow Q.pop()$\\
-		$Q\leftarrow Q+succ(s)$\\
-		\If{s.heuristique}{
-			Q.sortBy(f)
+		\If{$s.goal()$}{\\
+			\Return $s$\\
 		}
-	
-	}
-	\Return $s$\caption{$BFS$ and $A^*$}
+		\If{$s.rajoute(C)$}{\\
+			$Q\leftarrow Q + s.succ(topology, capacity)$\\
+			$Q\leftarrow Q+succ(s)$\\
+			\If{$s.heuristic$}{\\
+				$Q.sortBy(f)$\\
+			}
+			\If{$\neg s.heuristic$}{\\
+				$Q.sortBy((s'\mapsto s'.cost))$
+			} 
+		}
+	}\Return $nil$   \caption{$BFS$ and $A^*$}
 \end{algorithm}
-				
-
-\subsection{A*}
-% Details of the A* implementation %
+where the functions $s.rajoute(C)$ takes a queue  $f(s) = s.cost + s.heuristic()$. This heuristic function represents an estimation of the minimal cost of operations needed to get to a goal state. It is described exactly in the following section.
 
 \subsection{Heuristic Function}
 % Details of the heuristic functions: main idea, optimality, admissibility %
-
+The heuristic function is given by 
+	\begin{align*}
+		s.heuristic() & = \begin{cases}	
+							max \{s.city.distanceTo(task.pickupCity)+\\ \ \ \ \ \ +task.pickupCity.distanceTo(task.deliveryCity)\},\\
+							max  \{s.city.distanceTo(task.deliverCity)\}.
+						\end{cases}
+	\end{align*}
+where the maximum is taken on the set $$\{task\in s.free\_tasks\ |\ capacity-s.cweight()\geq task.weight\}$$ in the first when it is not empty, and on $$\{task\in s.ctask\}.$$ in the second case, when the first set is empty. We claim that such an heuristic is optimal for the $A^*$ algorithm. Indeed, one easily sees that in order to get to a goal state, one needs at least to pick and deliver the remaining tasks that were not picked up before, especially the farthest one. This is the exactly the value $s.heuristic$ takes in the first case. In the second one, assuming that all the tasks were picked up, one still needs to deliver each tasks that has yet to be deliverde. In particular the farthest one. This corresponds to taking this maximum in the second case. \\
+As the seen in the course this allows us to say that $A^*$ does find the optimal plan. This heuristic function was inspired by trying to force the agent to take a maximum of tasks and the deliver them. Also note that in the first case, the maximum is computed only on the $tasks$ that are light enough to be picked by the agent. This lets us influence the search along the way of delivering when at a given state, the agent can not pick up any more tasks.
 
 \section{Results}
 
