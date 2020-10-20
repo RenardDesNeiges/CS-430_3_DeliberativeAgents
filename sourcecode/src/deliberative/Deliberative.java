@@ -24,7 +24,7 @@ import logist.topology.Topology.City;
  * An optimal planner for one vehicle.
  */
 
-class State implements Comparable<State>{
+public class State implements Comparable<State>{
 	enum Act {
 		MOVE, PICKUP, DELIVER, START
 	}
@@ -112,10 +112,31 @@ class State implements Comparable<State>{
 
 	public double heuristic(){
 		// C'est uNE hEUriSTIqUE (j'ai mis de constantes au bol, de façon heuristique tsais)
-		if(this.heuristic)
-			return 600*this.free_tasks.size()+300*this.ctask.size();
+		//System.out.println("Heuristic !");
+		if(this.heuristic) {
+			if(this.free_tasks.size() != 0) {
+				double max_free = Double.NEGATIVE_INFINITY;
+				for(Task task: this.free_tasks) {
+					double x = this.city.distanceTo(task.pickupCity) + task.pickupCity.distanceTo(task.deliveryCity);
+					if(max_free < x)
+						max_free = x;
+				}
+				return max_free;
+			}
+			
+			else {
+				double max_carry = Double.NEGATIVE_INFINITY;
+				for(Task task: this.ctask) { 
+					double x = this.city.distanceTo(task.deliveryCity);
+					if(max_carry < x)
+						max_carry = x;
+				}
+				return max_carry;
+			}
+		}
 		else
 			return 0;
+		
 	}
 
 	/*
@@ -124,6 +145,25 @@ class State implements Comparable<State>{
 	 */
 	public Stack<State> succ(Topology topology,int capacity){
 		Stack<State> succ = new Stack<State>();
+		
+		//generating delivery actions
+		for (Task task : this.ctask) {
+			if (task.deliveryCity == this.city) {
+
+				LinkedList nCTask = new LinkedList();
+				nCTask = (LinkedList) this.ctask.clone();
+				nCTask.remove(task);
+
+				State nState = new State(this.city, nCTask, this.free_tasks, this, this.cost,Act.DELIVER,this.depth+1,this.heuristic);
+				succ.push(nState);
+			}
+		}
+		
+		if(succ.size() != 0) {
+			Stack<State> res = new Stack<State>();
+			res.push(succ.pop());
+			return res;
+		}
 		
 		//generating movement actions
 		for (City stop : topology) {
@@ -150,18 +190,7 @@ class State implements Comparable<State>{
 			}
 		}
 
-		//generating delivery actions
-		for (Task task : this.ctask) {
-			if (task.deliveryCity == this.city) {
-
-				LinkedList nCTask = new LinkedList();
-				nCTask = (LinkedList) this.ctask.clone();
-				nCTask.remove(task);
-
-				State nState = new State(this.city, nCTask, this.free_tasks, this, this.cost,Act.DELIVER,this.depth+1,this.heuristic);
-				succ.push(nState);
-			}
-		}
+		
 
 		//We return a linked list of possible successor states
 		return succ;
@@ -180,9 +209,31 @@ class State implements Comparable<State>{
 	/*
 	 * When print is called on a State object, this is what is gets printed
 	 */
+	
+	public Boolean rajoute(LinkedList<State> C) {
+		if (this.act == Act.START) {
+			C.add(this);
+			return true;
+		}
+		
+		for (State st: C) {
+			if (st.city == this.city && st.free_tasks == this.free_tasks && st.ctask == this.ctask && st.act == this.act) {
+				if(this.cost <= st.cost) {
+					C.add(this);
+					return true;
+				}
+				return false;
+			}
+		}
+		
+		C.add(this);
+		return true;
+	}
+		
 	@Override
 	public String toString() {
-		return this.city + "; cost: " + this.cost + "; act: "+ this.act + "; freeTasks : " + this.free_tasks.size()+"; depth: "+this.depth;
+		return this.city + "; cost: " + this.cost + "; act: "+ this.act + "; freeTasks : " + this.free_tasks.size()+ "; carried tasks: " + this.ctask.size() + "; depth: "+this.depth;
+						
 	}
 	@Override
 	public int compareTo(State cmp){
@@ -256,27 +307,42 @@ public class Deliberative implements DeliberativeBehavior {
 
 	private State astarAlgorithm(Vehicle vehicle, TaskSet tasks,Boolean heuristic) {
 		LinkedList<State> Q = new LinkedList<State>();
+		LinkedList<State> C = new LinkedList<State>();
 		int dpth = 0;
 		
-		System.out.println("Running A*");
+		if(heuristic)
+			System.out.println("Running A*");
+		else
+			System.out.println("Running BFS");
 
 		Q.add(new State(vehicle.getCurrentCity(), this.planInitTasks, tasks, null, 0.0, Act.START, 0, heuristic)); // initializing the stack with the root node
 		while (Q.size() > 0) {
 			System.out.println("Size of Q: " + Q.size());
-			Collections.sort(Q);
+			
 			State node = Q.removeFirst();
+			
+			if(node.isGoal())
+				return node;
+			if(node.act == Act.START) {
+				for (State st: node.succ(topology, capacity))
+					Q.add(st);
+				Collections.sort(Q);
+			}
+			
+			if(node.rajoute(C)) {
+				for (State st: node.succ(topology, this.capacity))
+					Q.add(st);
+				Collections.sort(Q);
+			}
+			
 			System.out.println("Current node :" + node.toString());
 			System.out.println("Current heuristic :" + node.heuristic());
+			
+			
 			if (node.isGoal()) {
 				return node;
 			}
 			// Pushing the new states into the stack
-			Stack<State> newStates = node.succ(this.topology, this.capacity);
-			System.out.println("Size of neighbour: " + newStates.size());
-
-			for (State st : newStates) {
-				Q.add(st);
-			}
 			//double val = node.cost+node.heuristic();
 			/*System.out.println("depth : " + node.depth + "; free-tasks: " + node.free_tasks.size() + "; ctasks : "
 					+ node.ctask.size() + "; h : " + val );*/
@@ -299,23 +365,23 @@ public class Deliberative implements DeliberativeBehavior {
 		}
 		Plan plan = new Plan(path.get(path.size()-1).city);
 		for (int i = path.size(); i-- > 0;) {
-			//System.out.println(i + ", s: " + path.get(i));
-			//System.out.println(i + ", f: " + path.get(i).free_tasks);
-			//System.out.println(i + ", c: " + path.get(i).ctask);
+			System.out.println(i + ", s: " + path.get(i));
+			System.out.println(i + ", f: " + path.get(i).free_tasks);
+			System.out.println(i + ", c: " + path.get(i).ctask);
 			if(path.get(i).act == Act.MOVE){
 				plan.appendMove(path.get(i).city);
 			}
 			else if(path.get(i).act == Act.PICKUP){
-				//System.out.print("Picked up ");
+				System.out.print("Picked up ");
 				plan.appendPickup(path.get(i).ctask.getLast());
 			}
 			else if(path.get(i).act == Act.DELIVER){
-				//System.out.println(path.get(i+1).ctask);
-				//System.out.print("Delivered ");
-				for (Task tsk : path.get(i+1).ctask) {
-					//System.out.println(tsk+ " // " + path.get(i).city);
+				System.out.println(path.get(i+1).ctask);
+				System.out.print("Delivered ");
+				for (Task tsk : path.get(i).ctask) {
+					System.out.println(tsk+ " // " + path.get(i).city);
 					if (tsk.deliveryCity == path.get(i).city) {
-						//System.out.println(tsk);
+						System.out.println(tsk);
 						plan.appendDelivery(tsk);
 						break;
 					}
