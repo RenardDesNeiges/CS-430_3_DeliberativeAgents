@@ -34,6 +34,7 @@ class State implements Comparable<State>{
 	public double cost;
 	public Act act;
 	public int depth;
+	public Task tsk;
 	private Boolean heuristic;
 	/*
 	 * Basic constructor
@@ -49,6 +50,21 @@ class State implements Comparable<State>{
 		this.act = act;
 		this.depth = depth;
 		this.heuristic = heuristic;
+		this.tsk = null;
+
+	}
+	
+	public State(logist.topology.Topology.City city, LinkedList<Task> ctask, LinkedList<Task> free_tasks, State parent,
+			double cost, Act act, int depth, Boolean heuristic,Task tsk) {
+		this.city = city;
+		this.ctask = ctask;
+		this.free_tasks = free_tasks;
+		this.parent = parent;
+		this.cost = cost;
+		this.act = act;
+		this.depth = depth;
+		this.heuristic = heuristic;
+		this.tsk = tsk;
 
 	}
 
@@ -65,6 +81,7 @@ class State implements Comparable<State>{
 		this.act = act;
 		this.depth = depth;
 		this.heuristic = heuristic;
+		this.tsk = null;
 			
 		//converting TaskSet to LinkedList<Task>
 		LinkedList<Task> lFreeTasks = new LinkedList<Task>();
@@ -82,6 +99,7 @@ class State implements Comparable<State>{
 		this.act = act;
 		this.depth = depth;
 		this.heuristic = heuristic;
+		this.tsk = null;
 
 		// converting TaskSet to LinkedList<Task>
 		LinkedList<Task> lFreeTasks = new LinkedList<Task>();
@@ -110,8 +128,6 @@ class State implements Comparable<State>{
 	}
 
 	public double heuristic(){
-		// C'est uNE hEUriSTIqUE (j'ai mis de constantes au bol, de façon heuristique tsais)
-		//System.out.println("Heuristic !");
 		if(this.heuristic) {
 			if(this.free_tasks.size() != 0) {
 				double max_free = Double.NEGATIVE_INFINITY;
@@ -153,7 +169,7 @@ class State implements Comparable<State>{
 				nCTask = (LinkedList) this.ctask.clone();
 				nCTask.remove(task);
 
-				State nState = new State(this.city, nCTask, this.free_tasks, this, this.cost,Act.DELIVER,this.depth+1,this.heuristic);
+				State nState = new State(this.city, nCTask, this.free_tasks, this, this.cost,Act.DELIVER,this.depth+1,this.heuristic,task);
 				succ.push(nState);
 			}
 		}
@@ -308,21 +324,24 @@ public class Deliberative implements DeliberativeBehavior {
 		LinkedList<State> Q = new LinkedList<State>();
 		LinkedList<State> C = new LinkedList<State>();
 		int dpth = 0;
+		int qsize = 0;
 		
 		if(heuristic)
 			System.out.println("Running A*");
 		else
 			System.out.println("Running BFS");
 
-		Q.add(new State(vehicle.getCurrentCity(), this.planInitTasks, tasks, null, 0.0, Act.START, 0, heuristic)); // initializing the stack with the root node
+		Q.add(new State(vehicle.getCurrentCity(), this.planInitTasks, tasks, null, 0.0, State.Act.START, 0, heuristic)); // initializing the stack with the root node
 		while (Q.size() > 0) {
-			System.out.println("Size of Q: " + Q.size());
+			qsize = Q.size();
+			if(qsize%500 == 0)
+				System.out.println("Size of Q: " + Q.size());
 			
 			State node = Q.removeFirst();
 			
 			if(node.isGoal())
 				return node;
-			if(node.act == Act.START) {
+			if(node.act == State.Act.START) {
 				for (State st: node.succ(topology, capacity))
 					Q.add(st);
 				Collections.sort(Q);
@@ -334,17 +353,9 @@ public class Deliberative implements DeliberativeBehavior {
 				Collections.sort(Q);
 			}
 			
-			System.out.println("Current node :" + node.toString());
-			System.out.println("Current heuristic :" + node.heuristic());
-			
-			
 			if (node.isGoal()) {
 				return node;
 			}
-			// Pushing the new states into the stack
-			//double val = node.cost+node.heuristic();
-			/*System.out.println("depth : " + node.depth + "; free-tasks: " + node.free_tasks.size() + "; ctasks : "
-					+ node.ctask.size() + "; h : " + val );*/
 			if (node.depth > dpth) {
 				dpth = node.depth;
 			}
@@ -364,29 +375,16 @@ public class Deliberative implements DeliberativeBehavior {
 		}
 		Plan plan = new Plan(path.get(path.size()-1).city);
 		for (int i = path.size(); i-- > 0;) {
-			System.out.println(i + ", s: " + path.get(i));
-			System.out.println(i + ", f: " + path.get(i).free_tasks);
-			System.out.println(i + ", c: " + path.get(i).ctask);
-			if(path.get(i).act == Act.MOVE){
+			if(path.get(i).act == State.Act.MOVE){
 				plan.appendMove(path.get(i).city);
 			}
-			else if(path.get(i).act == Act.PICKUP){
+			else if(path.get(i).act == State.Act.PICKUP){
 				System.out.print("Picked up ");
 				plan.appendPickup(path.get(i).ctask.getLast());
 			}
-			else if(path.get(i).act == Act.DELIVER){
-				System.out.println(path.get(i+1).ctask);
-				System.out.print("Delivered ");
-				for (Task tsk : path.get(i+1).ctask) {
-					//System.out.println(tsk+ " // " + path.get(i).city);
-					if (tsk.deliveryCity == path.get(i).city) {
-						System.out.println(tsk);
-						plan.appendDelivery(tsk);
-						break;
-					}
-				}
+			else if(path.get(i).act == State.Act.DELIVER){
+				plan.appendDelivery(path.get(i).tsk);
 			}
-			//System.out.println("");
 		}
 		return plan;
 	}
@@ -405,7 +403,7 @@ public class Deliberative implements DeliberativeBehavior {
 
 	@Override
 	public void planCancelled(TaskSet carriedTasks) {
-		System.out.println("PLAN IS FUCKED, recomputing....");
+		System.out.println("Plan not feasible anymore, recomputing....");
 		if (!carriedTasks.isEmpty()) {
 			this.planInitTasks = carriedTasks;
 		}
